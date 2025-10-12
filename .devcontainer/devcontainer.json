@@ -7,7 +7,7 @@
 		"vscode": {
 			"extensions": [
 				"Dart-Code.flutter",
-				"image": "mcr.microsoft.com/devcontainers/flutter:3.13-alpine",
+				"image": "mcr.microsoft.com/devcontainers/flutter:3.13",
 				"usernamehw.errorlens",
 				"SonarSource.sonarlint-vscode",
 				"EditorConfig.EditorConfig",
