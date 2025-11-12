@@ -1,339 +1,254 @@
-# Maverick Browser
+# YouTube Clone - Flutter
 
-A production-level, feature-rich web browser app built with React Native and Expo. Maverick Browser provides a fast, secure, and intuitive browsing experience with modern features.
+A fully functional YouTube clone built with Flutter, featuring video playback, search, subscriptions, and more.
 
 ## Features
 
-- 🌐 **Full Web Browsing**: Complete web browsing capability with WebView
-- 📑 **Tab Management**: Open multiple tabs and switch between them seamlessly
-- 🔖 **Bookmarks**: Save and organize your favorite websites
-- 📜 **Browser History**: Track visited websites with search functionality
-- ⚙️ **Advanced Settings**: Customize browser behavior and preferences
-- 🔒 **Privacy & Security**: Privacy controls including popup blocking
-- 💾 **Data Persistence**: Automatic saving of tabs, bookmarks, and history
-- 🎨 **Dark Mode UI**: Modern dark theme for comfortable browsing
-- 📱 **Responsive Design**: Optimized for both phones and tablets
-- ⚡ **Fast Performance**: Built with Expo for optimal performance
+### Core Features
+- 📱 **Modern UI** - Clean and intuitive interface matching YouTube's design
+- 🎥 **Video Player** - Full-featured video player with controls
+- 🔍 **Search** - Search videos with real-time results
+- 🏠 **Home Feed** - Browse videos in your home feed
+- 🔥 **Trending** - Discover trending videos
+- 📺 **Subscriptions** - Manage your subscribed channels
+- 📚 **Library** - Access your playlists and saved videos
+- 💬 **Comments** - View and interact with comments
+- 👍 **Interactions** - Like, dislike, and subscribe to channels
+- 🌙 **Dark/Light Mode** - Toggle between dark and light themes
 
-## Technology Stack
-
-- **React Native** 0.72+ - Cross-platform mobile app framework
-- **Expo** 49+ - Development platform and deployment service
-- **TypeScript** - Static type checking for code safety
-- **Zustand** - Lightweight state management
-- **React Navigation** - Navigation and routing
-- **React Native WebView** - Web content rendering
-- **AsyncStorage** - Local data persistence
-- **Jest** - Testing framework
-- **ESLint & Prettier** - Code quality and formatting
+### Technical Features
+- Provider for state management
+- Go Router for navigation
+- Cached images for better performance
+- Shimmer loading effects
+- Video player with Chewie
+- Responsive design
+- Mock data service for demonstration
 
 ## Project Structure
 
 ```
-maverick-browser/
-├── src/
-│   ├── __tests__/           # Unit and integration tests
-│   ├── assets/              # Images, icons, and other assets
-│   ├── components/          # Reusable React components
-│   │   ├── AddressBar.tsx   # URL input and navigation controls
-│   │   ├── WebViewComponent.tsx  # Web rendering component
-│   │   └── ErrorBoundary.tsx    # Error handling component
-│   ├── navigation/          # Navigation configuration
-│   │   └── RootNavigator.tsx    # App navigation setup
-│   ├── screens/             # Screen components
-│   │   ├── BrowserScreen.tsx
-│   │   ├── BookmarksScreen.tsx
-│   │   ├── HistoryScreen.tsx
-│   │   ├── SettingsScreen.tsx
-│   │   ├── HomeScreen.tsx
-│   │   └── TabManagementScreen.tsx
-│   ├── store/               # State management with Zustand
-│   │   ├── browserStore.ts
-│   │   ├── bookmarkStore.ts
-│   │   ├── historyStore.ts
-│   │   └── settingsStore.ts
-│   ├── services/            # Business logic and API
-│   │   └── initialization.ts
-│   ├── types/               # TypeScript type definitions
-│   │   └── index.ts
-│   ├── utils/               # Utility functions
-│   │   ├── helpers.ts
-│   │   └── errorHandler.ts
-│   └── index.tsx            # App entry point
-├── app.json                 # Expo configuration
-├── package.json             # Dependencies and scripts
-├── tsconfig.json            # TypeScript configuration
-├── jest.config.js           # Jest testing configuration
-├── .eslintrc.json           # ESLint configuration
-├── .prettierrc.json         # Prettier configuration
-└── index.js                 # React Native entry point
+lib/
+├── models/          # Data models
+│   ├── video.dart
+│   ├── comment.dart
+│   └── channel.dart
+├── providers/       # State management
+│   ├── video_provider.dart
+│   └── theme_provider.dart
+├── screens/         # UI screens
+│   ├── main_screen.dart
+│   ├── home_screen.dart
+│   ├── trending_screen.dart
+│   ├── subscriptions_screen.dart
+│   ├── library_screen.dart
+│   ├── video_player_screen.dart
+│   └── search_screen.dart
+├── widgets/         # Reusable widgets
+│   ├── video_card.dart
+│   ├── comment_card.dart
+│   └── shimmer_loading.dart
+├── services/        # Business logic
+│   └── mock_data_service.dart
+├── utils/           # Helper functions
+│   └── format_helper.dart
+└── main.dart        # App entry point
 ```
+
+## Dependencies
+
+- **flutter**: Flutter SDK
+- **provider**: State management
+- **go_router**: Navigation and routing
+- **video_player**: Video playback functionality
+- **chewie**: Enhanced video player UI
+- **cached_network_image**: Image caching
+- **shimmer**: Loading animations
+- **font_awesome_flutter**: Additional icons
+- **timeago**: Time formatting
+- **shared_preferences**: Local storage
 
 ## Getting Started
 
 ### Prerequisites
-
-- Node.js 18+ and npm/yarn
-- Expo CLI: `npm install -g expo-cli`
-- iOS Simulator (for iOS) or Android Emulator (for Android)
+- Flutter SDK (^3.9.2)
+- Dart SDK
+- Android Studio / Xcode (for mobile development)
+- VS Code or Android Studio (recommended)
 
 ### Installation
 
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd maverick-browser
+cd youtube_clone
 ```
 
 2. Install dependencies:
 ```bash
-npm install
+flutter pub get
 ```
 
-3. Configure environment variables:
+3. Run the app:
 ```bash
-cp .env.example .env
+flutter run
 ```
 
-4. Start the Expo development server:
+### Running on Different Platforms
+
+**Android:**
 ```bash
-npm start
+flutter run -d android
 ```
 
-5. Run on your device:
-   - **iOS**: Press `i` or `expo run:ios`
-   - **Android**: Press `a` or `expo run:android`
-   - **Web**: Press `w` or `npm run web`
+**iOS:**
+```bash
+flutter run -d ios
+```
+
+**Web:**
+```bash
+flutter run -d chrome
+```
+
+**Desktop:**
+```bash
+flutter run -d windows
+# or
+flutter run -d macos
+# or
+flutter run -d linux
+```
 
 ## Usage
 
-### Opening a Website
-1. Tap the address bar at the top
-2. Enter a URL or search query
-3. Press "Go" on the keyboard
+### Home Screen
+- Browse through a list of videos
+- Pull to refresh content
+- Tap on any video to watch
 
-### Managing Tabs
-- **New Tab**: Tap the `+` button in the address bar
-- **Switch Tab**: Tap the tab count indicator
-- **Close Tab**: Swipe left on a tab in tab management
+### Video Player
+- Full-screen video playback
+- Like/Dislike videos
+- Subscribe to channels
+- Read and interact with comments
+- View related videos
 
-### Bookmarking Pages
-1. While viewing a page, look for the bookmark option in the address bar
-2. Give it a name and save
-3. Access bookmarks from the Bookmarks tab
+### Search
+- Search for videos by title or channel
+- Real-time search results
+- Search suggestions
 
-### Browsing History
-- View recently visited sites in the History tab
-- Search through your browsing history
-- Clear history at any time from settings
+### Subscriptions
+- View subscribed channels
+- Browse videos from subscribed channels
 
-### Customizing Settings
-Navigate to the Settings tab to:
-- Change the home page URL
-- Select your preferred search engine
-- Toggle JavaScript and cookies
-- Enable/disable popup blocking
-- Switch dark/light mode
-- Clear browser data
+### Library
+- Access watch history
+- View liked videos
+- Manage playlists
 
-## Scripts
+### Settings
+- Toggle dark/light mode
+- Configure app preferences
 
-```bash
-# Development
-npm start              # Start Expo development server
-npm run ios           # Run on iOS simulator
-npm run android       # Run on Android emulator
-npm run web           # Run in web browser
+## Customization
 
-# Build & Deployment
-npm run build:ios     # Build for iOS
-npm run build:android # Build for Android
-npm run build:web     # Build for web
+### Adding Real API Integration
 
-# Code Quality
-npm run lint          # Run ESLint
-npm run lint:fix      # Fix linting issues
-npm run type-check    # Check TypeScript types
-npm test              # Run tests
-npm run test:watch    # Run tests in watch mode
+To integrate with a real API (like YouTube Data API):
+
+1. Replace the `MockDataService` with real API calls
+2. Update the models to match API response
+3. Add API key configuration
+4. Implement proper error handling
+
+Example:
+```dart
+// lib/services/youtube_api_service.dart
+class YouTubeApiService {
+  static const String API_KEY = 'YOUR_API_KEY';
+  static const String BASE_URL = 'https://www.googleapis.com/youtube/v3';
+  
+  Future<List<Video>> fetchVideos() async {
+    // Implement API call
+  }
+}
 ```
 
-## API & State Management
+### Modifying Theme
 
-### Zustand Stores
+Edit `lib/providers/theme_provider.dart` to customize colors and styling:
 
-The app uses Zustand for state management with the following stores:
-
-- **browserStore**: Manages open tabs and navigation state
-- **bookmarkStore**: Handles bookmarks CRUD operations
-- **historyStore**: Tracks and manages browser history
-- **settingsStore**: Stores user preferences
-
-Each store includes hydration support for data persistence with AsyncStorage.
-
-### Example Store Usage
-
-```typescript
-import { useBrowserStore } from './store/browserStore';
-
-// In a component
-const { tabs, addTab, removeTab } = useBrowserStore();
-
-// Using the store
-addTab('https://example.com');
-removeTab(tabId);
+```dart
+ThemeData.dark().copyWith(
+  primaryColor: Colors.red,
+  // Add your customizations
+);
 ```
 
-## Data Persistence
+## Architecture
 
-The app automatically saves:
-- Open tabs and active tab state
-- Bookmarks
-- Browser history
-- User settings
+The app follows a clean architecture pattern:
 
-Data is persisted to AsyncStorage every 30 seconds and when the app goes to background.
+- **Models**: Define data structures
+- **Services**: Handle data fetching and business logic
+- **Providers**: Manage app state
+- **Screens**: UI components for different pages
+- **Widgets**: Reusable UI components
+- **Utils**: Helper functions and utilities
 
-## Testing
+## Performance Optimizations
 
-Run the test suite:
-```bash
-npm test
-```
+- Lazy loading of videos
+- Image caching with cached_network_image
+- Efficient state management with Provider
+- Shimmer effects during loading
+- Optimized video player with Chewie
 
-Run tests in watch mode:
-```bash
-npm run test:watch
-```
+## Known Limitations
 
-Test files are located in `src/__tests__/` directory.
+- Uses mock data instead of real API
+- Video URLs are placeholders
+- No user authentication
+- No video upload functionality
+- Limited offline support
 
-## Browser Support
+## Future Enhancements
 
-- **iOS 12.0+**
-- **Android 5.0+ (API 21+)**
-- **Web (Chrome, Firefox, Safari)**
-
-## Performance Considerations
-
-- WebView is lazy-loaded for better initial load time
-- State is debounced to reduce storage writes
-- Large history is automatically trimmed
-- Images and assets are optimized
-
-## Security Features
-
-- HTTPS only for external URLs
-- Content Security Policy headers support
-- Cookie and JavaScript controls
-- User agent spoofing prevention
-- Local network access restrictions
-
-## Troubleshooting
-
-### App Won't Start
-1. Clear cache: `rm -rf node_modules package-lock.json`
-2. Reinstall: `npm install`
-3. Clear Expo cache: `expo start -c`
-
-### WebView Not Loading
-- Ensure internet connectivity
-- Check if URL is valid
-- Verify cleartext traffic is enabled for Android in `app.json`
-
-### Bookmarks/History Not Persisting
-- Check AsyncStorage permissions
-- Ensure app has write access to device storage
-- Try clearing app data and restarting
+- [ ] User authentication
+- [ ] Real YouTube API integration
+- [ ] Video upload functionality
+- [ ] Advanced search filters
+- [ ] Playlist management
+- [ ] Picture-in-picture mode
+- [ ] Download videos for offline viewing
+- [ ] Push notifications
+- [ ] Live streaming support
+- [ ] Analytics dashboard
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Commit changes: `git commit -am 'Add feature'`
-4. Push to branch: `git push origin feature/your-feature`
-5. Submit a pull request
-
-## Development Guidelines
-
-- Follow TypeScript strict mode
-- Use functional components with hooks
-- Write tests for new features
-- Follow the established project structure
-- Use Prettier for code formatting
-- Keep components focused and reusable
-
-## Build & Deployment
-
-### EAS Build (Recommended)
-
-```bash
-# Install EAS CLI
-npm install -g eas-cli
-
-# Build for iOS
-eas build --platform ios
-
-# Build for Android
-eas build --platform android
-
-# Build for production
-eas build --platform all --auto-submit
-```
-
-### Manual Build
-
-```bash
-# iOS
-npm run build:ios
-
-# Android
-npm run build:android
-```
-
-## Performance Metrics
-
-- Average startup time: ~2-3 seconds
-- Memory footprint: ~80-120MB (varies by device)
-- WebView rendering: Native speed
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT License - See LICENSE file for details
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Disclaimer
+
+This is a clone project for educational purposes only. It is not affiliated with YouTube or Google in any way.
+
+## Acknowledgments
+
+- Flutter team for the amazing framework
+- All package maintainers
+- YouTube for the design inspiration
 
 ## Support
 
-For issues, questions, or suggestions:
-1. Check existing GitHub issues
-2. Create a new issue with detailed description
-3. Include device info and reproduction steps
-
-## Changelog
-
-### Version 1.0.0 (Current)
-- Initial release
-- Tab management system
-- Bookmarks functionality
-- Browser history tracking
-- Settings and preferences
-- Dark mode UI
-- Full WebView support
-
-## Roadmap
-
-- [ ] Tab sync across devices
-- [ ] Reading mode
-- [ ] Built-in VPN support
-- [ ] Advanced ad blocker
-- [ ] Download manager
-- [ ] PWA support
-- [ ] Voice search
-- [ ] Tab groups
-
-## Credits
-
-Built with React Native and Expo, featuring best practices in mobile app development.
+For issues and questions, please open an issue on the GitHub repository.
 
 ---
 
-**Maverick Browser** - Your fast, secure, and feature-rich web browser for mobile.
+Built with ❤️ using Flutter

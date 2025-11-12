@@ -1,347 +1,417 @@
-# Maverick Browser - Architecture Documentation
+# YouTube Clone - Architecture
 
-## Overview
+## Application Architecture
 
-Maverick Browser is a production-grade React Native web browser application built with Expo, designed for both iOS and Android platforms. The architecture follows modern React patterns and best practices for mobile app development.
+### Overview
+This Flutter YouTube Clone follows a clean, layered architecture pattern that separates concerns and promotes maintainability, testability, and scalability.
 
 ## Architecture Layers
 
-### 1. Presentation Layer (UI Components)
-
-Located in `src/components/` and `src/screens/`, this layer handles all user interface rendering.
-
-#### Components (`src/components/`)
-- **AddressBar**: Navigation controls, URL input, tab management
-- **WebViewComponent**: Web content rendering wrapper
-- **ErrorBoundary**: Global error handling boundary
-
-#### Screens (`src/screens/`)
-- **BrowserScreen**: Main browsing interface
-- **BookmarksScreen**: Bookmark management and browsing
-- **HistoryScreen**: History viewing and searching
-- **SettingsScreen**: User preferences and app configuration
-- **HomeScreen**: Home page with quick actions
-- **TabManagementScreen**: Tab overview and management
-
-### 2. Navigation Layer (`src/navigation/`)
-
-Uses React Navigation v6 with bottom tab navigation as the primary navigation structure.
-
-- **RootNavigator**: Main tab-based navigation
-- Stack navigators for each tab section
-- Deep linking support for URL handling
-
-### 3. State Management Layer (`src/store/`)
-
-Implements Zustand stores for lightweight, performant state management:
-
 ```
-browserStore → Manages tabs and active tab state
-    ├── tabs: BrowserTab[]
-    ├── activeTabId: string
-    └── Actions: addTab, removeTab, setActiveTab, updateTab
-
-bookmarkStore → Handles bookmark CRUD
-    ├── bookmarks: Bookmark[]
-    └── Actions: addBookmark, removeBookmark, searchBookmarks
-
-historyStore → Tracks browser history
-    ├── entries: HistoryEntry[]
-    └── Actions: addEntry, removeEntry, searchHistory, getRecentHistory
-
-settingsStore → Manages user preferences
-    ├── settings: BrowserSettings
-    └── Actions: updateSetting, updateSettings, resetSettings
+┌─────────────────────────────────────────────┐
+│              Presentation Layer              │
+│  (Screens, Widgets, UI Components)          │
+│  - main_screen.dart                         │
+│  - home_screen.dart                         │
+│  - video_player_screen.dart                 │
+│  - search_screen.dart                       │
+│  - video_card.dart, comment_card.dart       │
+└─────────────────────────────────────────────┘
+                    ↓ Uses
+┌─────────────────────────────────────────────┐
+│          State Management Layer              │
+│  (Providers - Business Logic State)          │
+│  - VideoProvider                            │
+│  - ThemeProvider                            │
+└─────────────────────────────────────────────┘
+                    ↓ Calls
+┌─────────────────────────────────────────────┐
+│             Service Layer                    │
+│  (Data Fetching & Business Logic)           │
+│  - MockDataService                          │
+│  - (Future: YouTubeApiService)              │
+└─────────────────────────────────────────────┘
+                    ↓ Returns
+┌─────────────────────────────────────────────┐
+│              Data Layer                      │
+│  (Models & Entities)                        │
+│  - Video                                    │
+│  - Comment                                  │
+│  - Channel                                  │
+└─────────────────────────────────────────────┘
 ```
 
-### 4. Data Persistence Layer (`src/services/`)
+## Component Breakdown
 
-Handles all data persistence operations using AsyncStorage:
+### 1. Presentation Layer
 
-- **initialization.ts**: 
-  - `initializeApp()`: Loads persisted state on app startup
-  - `saveAppState()`: Persists current state to AsyncStorage
-  - `clearAppData()`: Clears all stored data
+#### Screens (`lib/screens/`)
+Responsible for full-page UI components:
 
-### 5. Utility & Helper Layer (`src/utils/`)
+- **MainScreen**: Container with bottom navigation
+- **HomeScreen**: Video feed with pull-to-refresh
+- **VideoPlayerScreen**: Video playback with controls and metadata
+- **TrendingScreen**: Trending videos feed
+- **SubscriptionsScreen**: Subscribed channels and videos
+- **LibraryScreen**: User library with playlists
+- **SearchScreen**: Search interface with suggestions
 
-**helpers.ts**
-- URL normalization and validation
-- Domain extraction
-- String truncation
-- Time formatting utilities
+#### Widgets (`lib/widgets/`)
+Reusable UI components:
 
-**errorHandler.ts**
-- Global error logging
-- Error boundary integration
-- Error history tracking
+- **VideoCard**: Displays video thumbnail, title, and metadata
+- **CommentCard**: Shows comment with user info and replies
+- **ShimmerLoading**: Loading animation effect
 
-### 6. Types Layer (`src/types/`)
+### 2. State Management Layer
 
-TypeScript type definitions for all major data structures:
+#### VideoProvider (`lib/providers/video_provider.dart`)
+Manages video-related state:
+```dart
+- homeVideos: List<Video>
+- trendingVideos: List<Video>
+- searchResults: List<Video>
+- loadHomeVideos()
+- searchVideos(query)
+- toggleLike(videoId)
+- toggleDislike(videoId)
+- toggleSubscribe(videoId)
+- getCommentsForVideo(videoId)
+```
 
-```typescript
-BrowserTab     - Individual browser tab state
-Bookmark       - Bookmark data structure
-HistoryEntry   - History entry with metadata
-BrowserSettings - User preferences
+#### ThemeProvider (`lib/providers/theme_provider.dart`)
+Manages app theme:
+```dart
+- isDarkMode: bool
+- toggleTheme()
+- themeData: ThemeData
+```
+
+### 3. Service Layer
+
+#### MockDataService (`lib/services/mock_data_service.dart`)
+Provides data operations:
+```dart
+- getHomeVideos(): List<Video>
+- getTrendingVideos(): List<Video>
+- getSubscriptionsVideos(): List<Video>
+- getCommentsForVideo(videoId): List<Comment>
+- getSubscribedChannels(): List<Channel>
+- searchVideos(query): List<Video>
+```
+
+**Future Integration Point**: Replace with real API service
+
+### 4. Data Layer
+
+#### Models (`lib/models/`)
+Define data structures:
+
+- **Video**: Complete video information
+- **Comment**: Comment with nested replies
+- **Channel**: Channel metadata
+
+Each model includes:
+- Properties with proper typing
+- `copyWith()` method for immutability
+- Constructor with named parameters
+
+### 5. Utility Layer
+
+#### FormatHelper (`lib/utils/format_helper.dart`)
+Helper functions for data formatting:
+```dart
+- formatNumber(int): String  // 1000 → "1K"
+- formatViews(String): String
+- formatDuration(String): String
 ```
 
 ## Data Flow
 
-### User Opens a URL
-
+### Video Playback Flow
 ```
-User Input (AddressBar)
+User taps video card
     ↓
-normalizeUrl (helpers)
+VideoCard widget calls onTap
     ↓
-updateTab (browserStore)
+Navigation pushes VideoPlayerScreen
     ↓
-WebViewComponent renders with new URL
+VideoPlayerScreen gets video from VideoProvider
     ↓
-onNavigationStateChange fires
+VideoPlayerController initializes
     ↓
-updateTab with navigation state
+Video plays, user interactions update VideoProvider
     ↓
-addEntry (historyStore) - adds to history
+VideoProvider notifies listeners
     ↓
-Auto-save to AsyncStorage (30s debounce)
-```
-
-### Bookmarking a Page
-
-```
-User taps bookmark icon
-    ↓
-addBookmark (bookmarkStore)
-    ↓
-UI updates to show bookmark status
-    ↓
-Data saved to AsyncStorage
-    ↓
-Bookmark appears in BookmarksScreen
+UI updates automatically
 ```
 
-### App Initialization
-
+### Search Flow
 ```
-App starts (index.tsx)
+User taps search icon
     ↓
-initializeApp called
+Navigation pushes SearchScreen
     ↓
-Load from AsyncStorage (parallel)
-    ├── Browser state
-    ├── Settings
-    ├── Bookmarks
-    └── History
+User enters query
     ↓
-hydrate each store
+VideoProvider.searchVideos(query) called
     ↓
-Render UI with persisted data
-```
-
-## State Management Flow
-
-### Unidirectional Data Flow
-
-```
-Store State (Zustand) → Component Props → UI Render
-         ↑                                    ↓
-         └────── User Action (Callback) ─────┘
+MockDataService.searchVideos(query) filters videos
+    ↓
+VideoProvider updates searchResults
+    ↓
+SearchScreen rebuilds with results
 ```
 
-### Key Principles
+### Like/Dislike Flow
+```
+User taps like button
+    ↓
+VideoProvider.toggleLike(videoId) called
+    ↓
+Video model updated with copyWith()
+    ↓
+VideoProvider notifies listeners
+    ↓
+UI updates (button state + count)
+```
 
-1. **Single Source of Truth**: Each piece of data exists in one store
-2. **Immutable Updates**: All store updates create new objects
-3. **Normalized State**: Avoid deeply nested state
-4. **Debounced Persistence**: Don't write to storage on every change
+## State Management Pattern
+
+### Provider Pattern
+```dart
+// main.dart - Setup
+MultiProvider(
+  providers: [
+    ChangeNotifierProvider(create: (_) => VideoProvider()),
+    ChangeNotifierProvider(create: (_) => ThemeProvider()),
+  ],
+  child: MyApp(),
+)
+
+// Screen - Consume
+Consumer<VideoProvider>(
+  builder: (context, videoProvider, child) {
+    return ListView.builder(
+      itemCount: videoProvider.homeVideos.length,
+      // ...
+    );
+  },
+)
+
+// Widget - Access directly
+Provider.of<VideoProvider>(context, listen: false).toggleLike(id);
+```
+
+## Navigation Architecture
+
+### Go Router Setup
+```dart
+final GoRouter _router = GoRouter(
+  routes: [
+    GoRoute(path: '/', builder: (_, __) => MainScreen()),
+    GoRoute(path: '/video/:id', builder: (_, state) => 
+      VideoPlayerScreen(videoId: state.pathParameters['id']!)),
+    GoRoute(path: '/search', builder: (_, __) => SearchScreen()),
+  ],
+);
+```
+
+### Deep Linking Support
+- `/` → Home
+- `/video/[id]` → Video player
+- `/search` → Search screen
+
+## Design Patterns Used
+
+### 1. Provider Pattern (State Management)
+- Centralized state
+- Reactive UI updates
+- Separation of concerns
+
+### 2. Repository Pattern (Service Layer)
+- Abstract data sources
+- Easy to swap implementations
+- Testable
+
+### 3. Factory Pattern (Mock Data)
+- Consistent data creation
+- Easy to replace with API
+
+### 4. Observer Pattern (ChangeNotifier)
+- Automatic UI updates
+- Efficient re-rendering
+
+### 5. Composition over Inheritance
+- Reusable widgets
+- Flexible UI components
+
+## Testing Strategy
+
+### Unit Tests
+- Model creation and copying
+- Service data fetching
+- Helper functions
+- State updates
+
+### Widget Tests
+- Component rendering
+- User interactions
+- Navigation flows
+
+### Integration Tests
+- End-to-end flows
+- API integration
+- State persistence
 
 ## Performance Optimizations
 
-### 1. Code Splitting
-- Lazy navigation screens loaded on demand
-- WebView component wraps heavy browser functionality
-
-### 2. Memoization
-- Components use React.memo where appropriate
-- useBrowserStore uses selective state subscriptions
-
-### 3. Storage Optimization
-- History limited to recent 50 entries
-- Debounced saves (30-second interval)
-- Only saves on significant state changes
-
-### 4. Memory Management
-- WebView lifecycle properly managed
-- Unused tabs can be closed
-- Error logs rotated (max 100 entries)
-
-## Error Handling Strategy
-
-### Application Level
-- Global ErrorBoundary wraps entire app
-- Console errors logged to errorHandler
-- Graceful degradation for failed operations
-
-### Component Level
-- Try-catch in async operations
-- Fallback UI for load failures
-- User-friendly error messages
-
-### Storage Level
-- Catch JSON parse errors
-- Fallback to defaults if corrupted
-- Validate loaded state structure
-
-## Scalability Considerations
-
-### For Future Growth
-
-1. **API Integration**
-   - Add API layer in `src/services/`
-   - Implement authentication module
-   - Add interceptors for API calls
-
-2. **Advanced Features**
-   - Split history store into local + cloud sync
-   - Add download manager service
-   - Implement reading mode processor
-
-3. **State Complexity**
-   - Consider Redux for very complex state
-   - Add middleware for cross-store communication
-   - Implement action middleware for logging
-
-4. **Performance**
-   - Implement virtualization for long lists
-   - Add lazy loading for images
-   - Optimize WebView bridge communication
-
-## Testing Architecture
-
-### Unit Tests (`src/__tests__/*.test.ts`)
-- Store mutation tests
-- Utility function tests
-- Type validation tests
-
-### Integration Tests
-- Navigation flow tests
-- Data persistence tests
-- User action sequences
-
-### E2E Tests (Future)
-- Full app workflows
-- Cross-platform compatibility
-- Performance benchmarks
-
-## Security Architecture
-
-### Data Security
-- No sensitive data in localStorage
-- Encrypted storage for future features
-- HTTPS enforcement in WebView
-
-### App Security
-- TypeScript strict mode prevents type vulnerabilities
-- Input sanitization in URL handling
-- User agent handling for privacy
-
-### Transport Security
-- WebView uses secure protocols
-- Certificate pinning ready
-- Local network restrictions configured
-
-## Build & Deployment
-
-### Development Build
-```
-npm start → Expo CLI → Metro Bundler → Development App
+### 1. Lazy Loading
+```dart
+ListView.builder(
+  itemCount: videos.length,
+  itemBuilder: (context, index) => VideoCard(video: videos[index]),
+)
 ```
 
-### Production Build
-```
-eas build → EAS Build Service → 
-├── iOS → TestFlight → App Store
-└── Android → Google Play Console
-```
-
-### Configuration Management
-- `app.json` → Expo configuration
-- `eas.json` → Build profiles
-- `tsconfig.json` → TypeScript settings
-- `.eslintrc.json` → Linting rules
-
-## Dependencies Overview
-
-### Core Framework
-- `react-native`: UI framework
-- `expo`: Development platform
-- `react`: UI library
-- `react-native-web`: Web support
-
-### Navigation
-- `@react-navigation/native`: Navigation core
-- `@react-navigation/bottom-tabs`: Tab navigation
-- `react-native-screens`: Native screens
-- `react-native-gesture-handler`: Gesture support
-
-### State Management
-- `zustand`: Lightweight state management
-- `@react-native-async-storage/async-storage`: Local persistence
-
-### Web Rendering
-- `react-native-webview`: Web content rendering
-
-### UI Components
-- `expo-status-bar`: Status bar management
-- `expo-constants`: App constants
-- `expo-splash-screen`: Splash screen
-
-### Development
-- `typescript`: Type safety
-- `jest`: Testing framework
-- `eslint`: Code linting
-- `prettier`: Code formatting
-
-## Future Architecture Improvements
-
-1. **State Machine**: Consider XState for complex UI flows
-2. **Offline Support**: Implement service workers
-3. **Telemetry**: Add analytics without compromising privacy
-4. **Plugin System**: Allow third-party extensions
-5. **Sync**: Cross-device bookmark and history sync
-6. **Performance**: Add performance monitoring and optimization
-
-## Conventions & Best Practices
-
-### File Organization
-- Group related functionality in directories
-- Use index files for clean imports
-- Keep files under 300 lines
-
-### Naming Conventions
-- Components: PascalCase (e.g., BrowserScreen.tsx)
-- Utilities: camelCase (e.g., normalizeUrl)
-- Types: PascalCase (e.g., BrowserTab)
-- Constants: UPPER_SNAKE_CASE (e.g., DEFAULT_HOME_URL)
-
-### TypeScript Usage
-- Use strict mode
-- Avoid `any` type
-- Define interfaces for all data structures
-- Use discriminated unions for complex types
-
-### Component Structure
-```typescript
-// 1. Imports
-// 2. Types/Interfaces
-// 3. Component definition
-// 4. Styles
-// 5. Exports
+### 2. Image Caching
+```dart
+CachedNetworkImage(
+  imageUrl: url,
+  placeholder: (context, url) => Shimmer(...),
+  errorWidget: (context, url, error) => Icon(Icons.error),
+)
 ```
 
----
+### 3. State Management
+- Only notify listeners when necessary
+- Use `listen: false` when not watching changes
+- Efficient `copyWith()` for immutability
 
-This architecture provides a solid foundation for a production-grade browser application with room for growth and enhancement.
+### 4. Widget Optimization
+- Use `const` constructors where possible
+- Extract widgets to reduce rebuild scope
+- Implement `shouldRebuild` when needed
+
+## Security Considerations
+
+### Data Handling
+- No sensitive data stored locally
+- Ready for secure API integration
+- Proper error handling
+
+### API Integration (Future)
+- API keys in environment variables
+- HTTPS only
+- Token-based authentication
+- Rate limiting
+
+## Scalability
+
+### Easy to Scale
+1. **Add Features**: Create new screens/widgets
+2. **Add State**: Create new providers
+3. **Add Data**: Add models and service methods
+4. **Add Platforms**: Flutter supports 6 platforms
+
+### Performance at Scale
+- Efficient list rendering
+- Image caching
+- Lazy loading
+- State optimization
+
+## Extension Points
+
+### 1. Real API Integration
+Replace `MockDataService` with:
+```dart
+class YouTubeApiService {
+  Future<List<Video>> fetchVideos() async {
+    final response = await http.get(Uri.parse(API_URL));
+    // Parse and return
+  }
+}
+```
+
+### 2. User Authentication
+Add `AuthProvider`:
+```dart
+class AuthProvider extends ChangeNotifier {
+  User? currentUser;
+  Future<void> login(credentials) async { }
+  Future<void> logout() async { }
+}
+```
+
+### 3. Offline Support
+Add `CacheService`:
+```dart
+class CacheService {
+  Future<void> cacheVideo(Video video) async { }
+  Future<Video?> getCachedVideo(String id) async { }
+}
+```
+
+### 4. Analytics
+Add `AnalyticsService`:
+```dart
+class AnalyticsService {
+  void logVideoView(String videoId) { }
+  void logSearch(String query) { }
+}
+```
+
+## Folder Structure Best Practices
+
+```
+lib/
+├── main.dart                    # Entry point
+├── models/                      # Data models
+│   └── [model_name].dart
+├── providers/                   # State management
+│   └── [provider_name]_provider.dart
+├── screens/                     # Full screens
+│   └── [screen_name]_screen.dart
+├── widgets/                     # Reusable widgets
+│   └── [widget_name].dart
+├── services/                    # Business logic
+│   └── [service_name]_service.dart
+├── utils/                       # Helpers
+│   └── [helper_name]_helper.dart
+└── constants/                   # Constants (future)
+    └── app_constants.dart
+```
+
+## Dependencies Management
+
+### Core Dependencies
+- `flutter`: Framework
+- `provider`: State management
+- `go_router`: Navigation
+
+### Feature Dependencies
+- `video_player`, `chewie`: Video playback
+- `cached_network_image`: Image optimization
+- `shimmer`: Loading effects
+
+### Utility Dependencies
+- `shared_preferences`: Local storage
+- `font_awesome_flutter`: Icons
+- `timeago`: Time formatting
+
+## Conclusion
+
+This architecture provides:
+- ✅ Clear separation of concerns
+- ✅ Easy to understand and maintain
+- ✅ Testable components
+- ✅ Scalable structure
+- ✅ Performance optimized
+- ✅ Ready for production enhancements
+
+The modular design allows developers to:
+- Add features without affecting existing code
+- Test components independently
+- Replace implementations easily
+- Scale the application smoothly
