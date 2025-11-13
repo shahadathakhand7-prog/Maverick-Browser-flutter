@@ -2,89 +2,75 @@
 
 ## Overview
 
-Maverick Browser is a production-grade React Native web browser application built with Expo, designed for both iOS and Android platforms. The architecture follows modern React patterns and best practices for mobile app development.
+Maverick Browser is a Flutter-based mobile web browser application designed for both iOS and Android platforms. The architecture follows Clean Architecture principles and feature-driven development patterns.
 
 ## Architecture Layers
 
-### 1. Presentation Layer (UI Components)
+### 1. Presentation Layer (`lib/features/*/presentation/`)
 
-Located in `src/components/` and `src/screens/`, this layer handles all user interface rendering.
+This layer handles all user interface rendering using Flutter widgets and state management with BLoC.
 
-#### Components (`src/components/`)
-- **AddressBar**: Navigation controls, URL input, tab management
-- **WebViewComponent**: Web content rendering wrapper
-- **ErrorBoundary**: Global error handling boundary
+**Components:**
+- Screen widgets (StatelessWidget/StatefulWidget)
+- BLoC/Cubit classes for state management
+- UI-specific models and view logic
 
-#### Screens (`src/screens/`)
-- **BrowserScreen**: Main browsing interface
-- **BookmarksScreen**: Bookmark management and browsing
-- **HistoryScreen**: History viewing and searching
-- **SettingsScreen**: User preferences and app configuration
-- **HomeScreen**: Home page with quick actions
-- **TabManagementScreen**: Tab overview and management
+### 2. Domain Layer (`lib/features/*/domain/`)
 
-### 2. Navigation Layer (`src/navigation/`)
+Contains business logic independent of frameworks:
 
-Uses React Navigation v6 with bottom tab navigation as the primary navigation structure.
+**Components:**
+- Entities: Core business objects
+- Use Cases: Business logic implementation
+- Repository interfaces: Abstract data contracts
 
-- **RootNavigator**: Main tab-based navigation
-- Stack navigators for each tab section
-- Deep linking support for URL handling
+### 3. Data Layer (`lib/features/*/data/`)
 
-### 3. State Management Layer (`src/store/`)
+Handles data operations and implements repository interfaces:
 
-Implements Zustand stores for lightweight, performant state management:
+**Components:**
+- Repository implementations
+- Data sources (local/remote)
+- Data models and mappers
+- API clients
+
+### 4. Core Layer (`lib/core/`)
+
+Shared functionality across features:
 
 ```
-browserStore → Manages tabs and active tab state
-    ├── tabs: BrowserTab[]
-    ├── activeTabId: string
-    └── Actions: addTab, removeTab, setActiveTab, updateTab
-
-bookmarkStore → Handles bookmark CRUD
-    ├── bookmarks: Bookmark[]
-    └── Actions: addBookmark, removeBookmark, searchBookmarks
-
-historyStore → Tracks browser history
-    ├── entries: HistoryEntry[]
-    └── Actions: addEntry, removeEntry, searchHistory, getRecentHistory
-
-settingsStore → Manages user preferences
-    ├── settings: BrowserSettings
-    └── Actions: updateSetting, updateSettings, resetSettings
+core/
+├── constants/        # App-wide constants (routes, colors, config)
+├── di/              # Dependency injection setup (GetIt)
+├── error/           # Failure handling and error models
+├── network/         # Dio HTTP client configuration
+├── storage/         # Hive local storage setup
+├── theme/           # Light/dark theme definitions
+└── utils/           # Helper utilities (logging, URL, platform)
 ```
 
-### 4. Data Persistence Layer (`src/services/`)
+### 5. Common Layer (`lib/common/`)
 
-Handles all data persistence operations using AsyncStorage:
+Reusable UI components and widgets shared across features:
 
-- **initialization.ts**: 
-  - `initializeApp()`: Loads persisted state on app startup
-  - `saveAppState()`: Persists current state to AsyncStorage
-  - `clearAppData()`: Clears all stored data
+- `widgets/`: Shared UI components (buttons, loaders, etc.)
 
-### 5. Utility & Helper Layer (`src/utils/`)
+## Feature Modules
 
-**helpers.ts**
-- URL normalization and validation
-- Domain extraction
-- String truncation
-- Time formatting utilities
+Each feature follows a vertical slice architecture:
 
-**errorHandler.ts**
-- Global error logging
-- Error boundary integration
-- Error history tracking
-
-### 6. Types Layer (`src/types/`)
-
-TypeScript type definitions for all major data structures:
-
-```typescript
-BrowserTab     - Individual browser tab state
-Bookmark       - Bookmark data structure
-HistoryEntry   - History entry with metadata
-BrowserSettings - User preferences
+```
+features/
+├── home/
+│   ├── data/         # Data sources and repository implementations
+│   ├── domain/       # Entities, use cases, repository contracts
+│   └── presentation/ # UI screens and BLoC state management
+├── browser/
+├── bookmarks/
+├── history/
+├── downloads/
+├── ads/
+└── settings/
 ```
 
 ## Data Flow
@@ -92,256 +78,189 @@ BrowserSettings - User preferences
 ### User Opens a URL
 
 ```
-User Input (AddressBar)
+User Input (AddressBar Widget)
     ↓
-normalizeUrl (helpers)
+URL Validation (UrlHelper)
     ↓
-updateTab (browserStore)
+BLoC Event (LoadUrlEvent)
     ↓
-WebViewComponent renders with new URL
+Use Case (LoadUrl)
     ↓
-onNavigationStateChange fires
+Repository (BrowserRepository)
     ↓
-updateTab with navigation state
+WebView renders URL
     ↓
-addEntry (historyStore) - adds to history
+BLoC State Update
     ↓
-Auto-save to AsyncStorage (30s debounce)
-```
-
-### Bookmarking a Page
-
-```
-User taps bookmark icon
+UI Re-renders
     ↓
-addBookmark (bookmarkStore)
-    ↓
-UI updates to show bookmark status
-    ↓
-Data saved to AsyncStorage
-    ↓
-Bookmark appears in BookmarksScreen
+History Entry Added (async)
 ```
 
 ### App Initialization
 
 ```
-App starts (index.tsx)
+main.dart starts
     ↓
-initializeApp called
+WidgetsFlutterBinding.ensureInitialized()
     ↓
-Load from AsyncStorage (parallel)
-    ├── Browser state
-    ├── Settings
-    ├── Bookmarks
-    └── History
+Initialize DI Container (GetIt)
+    ├── Register Logger
+    ├── Register DioClient
+    ├── Initialize Hive Storage
+    └── Register Feature Dependencies
     ↓
-hydrate each store
+runApp(MaverickBrowserApp)
     ↓
-Render UI with persisted data
+MaterialApp builds with theme
+    ↓
+Home Screen renders
 ```
 
-## State Management Flow
+## State Management
 
-### Unidirectional Data Flow
+### BLoC Pattern
+
+The app uses the BLoC (Business Logic Component) pattern:
 
 ```
-Store State (Zustand) → Component Props → UI Render
-         ↑                                    ↓
-         └────── User Action (Callback) ─────┘
+UI → Event → BLoC → State → UI
 ```
 
-### Key Principles
+**Benefits:**
+- Clear separation of UI and business logic
+- Testable business logic
+- Predictable state changes
+- Time-travel debugging support
 
-1. **Single Source of Truth**: Each piece of data exists in one store
-2. **Immutable Updates**: All store updates create new objects
-3. **Normalized State**: Avoid deeply nested state
-4. **Debounced Persistence**: Don't write to storage on every change
+### HydratedBloc
+
+For persistent state:
+
+```
+BLoC State → HydratedBloc → Hive Storage
+     ↑                            ↓
+     └─────── App Restart ────────┘
+```
+
+## Dependency Injection
+
+Uses GetIt for service locator pattern:
+
+```dart
+// Registration (injection_container.dart)
+serviceLocator.registerLazySingleton<Logger>(() => AppLogger.logger);
+serviceLocator.registerLazySingleton<DioClient>(() => DioClient(...));
+
+// Usage
+final logger = serviceLocator<Logger>();
+```
+
+## Error Handling
+
+### Failure Model
+
+Uses `Either<Failure, Success>` from dartz for functional error handling:
+
+```dart
+Either<Failure, BookmarkList> result = await getBookmarks();
+
+result.fold(
+  (failure) => emit(BookmarksError(failure)),
+  (bookmarks) => emit(BookmarksLoaded(bookmarks)),
+);
+```
+
+### Failure Types
+- `ServerFailure`: API/network errors
+- `CacheFailure`: Local storage errors
+- `NetworkFailure`: Connectivity issues
+- `ValidationFailure`: Input validation errors
+
+## Routing & Navigation
+
+Navigation setup using named routes:
+
+```dart
+AppRoutes.home       // '/'
+AppRoutes.browser    // '/browser'
+AppRoutes.bookmarks  // '/bookmarks'
+AppRoutes.history    // '/history'
+AppRoutes.downloads  // '/downloads'
+AppRoutes.settings   // '/settings'
+```
 
 ## Performance Optimizations
 
-### 1. Code Splitting
-- Lazy navigation screens loaded on demand
-- WebView component wraps heavy browser functionality
+### 1. Lazy Loading
+- Feature modules loaded on demand
+- Heavy widgets use `const` constructors
 
-### 2. Memoization
-- Components use React.memo where appropriate
-- useBrowserStore uses selective state subscriptions
+### 2. State Management
+- BLoC prevents unnecessary rebuilds
+- Selective widget rebuilds with BlocBuilder
 
-### 3. Storage Optimization
-- History limited to recent 50 entries
-- Debounced saves (30-second interval)
-- Only saves on significant state changes
+### 3. Storage
+- Hive provides fast key-value storage
+- HydratedBloc auto-persists state
 
-### 4. Memory Management
-- WebView lifecycle properly managed
-- Unused tabs can be closed
-- Error logs rotated (max 100 entries)
+### 4. Network
+- Dio with interceptors for logging
+- Request cancellation support
 
-## Error Handling Strategy
+## Testing Strategy
 
-### Application Level
-- Global ErrorBoundary wraps entire app
-- Console errors logged to errorHandler
-- Graceful degradation for failed operations
-
-### Component Level
-- Try-catch in async operations
-- Fallback UI for load failures
-- User-friendly error messages
-
-### Storage Level
-- Catch JSON parse errors
-- Fallback to defaults if corrupted
-- Validate loaded state structure
-
-## Scalability Considerations
-
-### For Future Growth
-
-1. **API Integration**
-   - Add API layer in `src/services/`
-   - Implement authentication module
-   - Add interceptors for API calls
-
-2. **Advanced Features**
-   - Split history store into local + cloud sync
-   - Add download manager service
-   - Implement reading mode processor
-
-3. **State Complexity**
-   - Consider Redux for very complex state
-   - Add middleware for cross-store communication
-   - Implement action middleware for logging
-
-4. **Performance**
-   - Implement virtualization for long lists
-   - Add lazy loading for images
-   - Optimize WebView bridge communication
-
-## Testing Architecture
-
-### Unit Tests (`src/__tests__/*.test.ts`)
-- Store mutation tests
-- Utility function tests
-- Type validation tests
-
-### Integration Tests
-- Navigation flow tests
-- Data persistence tests
-- User action sequences
-
-### E2E Tests (Future)
-- Full app workflows
-- Cross-platform compatibility
-- Performance benchmarks
-
-## Security Architecture
-
-### Data Security
-- No sensitive data in localStorage
-- Encrypted storage for future features
-- HTTPS enforcement in WebView
-
-### App Security
-- TypeScript strict mode prevents type vulnerabilities
-- Input sanitization in URL handling
-- User agent handling for privacy
-
-### Transport Security
-- WebView uses secure protocols
-- Certificate pinning ready
-- Local network restrictions configured
-
-## Build & Deployment
-
-### Development Build
 ```
-npm start → Expo CLI → Metro Bundler → Development App
+test/
+├── unit/           # Unit tests for use cases, repositories
+├── widget/         # Widget tests for UI components
+└── integration/    # Integration tests for features
 ```
 
-### Production Build
+## Platform Configuration
+
+### Android
+- Application ID: `com.maverick.browser`
+- Min SDK: 21 (Android 5.0)
+- Target SDK: 34 (Android 14)
+- MultiDex enabled
+- ProGuard/R8 shrinking for release builds
+
+### iOS
+- Bundle ID: `com.maverick.browser`
+- Deployment Target: iOS 12+
+- Swift 5.0
+- CocoaPods for dependency management
+
+## Future Enhancements
+
+### Planned Architecture Improvements
+1. Implement feature-specific routing modules
+2. Add analytics tracking layer
+3. Implement offline-first architecture
+4. Add state restoration for app lifecycle
+5. Implement download manager module
+6. Add ad integration layer
+7. Implement permission handler abstraction
+
+### Code Generation
+- Freezed for immutable models
+- JsonSerializable for JSON parsing
+- Build runner for code generation:
+
+```bash
+flutter pub run build_runner build --delete-conflicting-outputs
 ```
-eas build → EAS Build Service → 
-├── iOS → TestFlight → App Store
-└── Android → Google Play Console
-```
 
-### Configuration Management
-- `app.json` → Expo configuration
-- `eas.json` → Build profiles
-- `tsconfig.json` → TypeScript settings
-- `.eslintrc.json` → Linting rules
+## Best Practices
 
-## Dependencies Overview
-
-### Core Framework
-- `react-native`: UI framework
-- `expo`: Development platform
-- `react`: UI library
-- `react-native-web`: Web support
-
-### Navigation
-- `@react-navigation/native`: Navigation core
-- `@react-navigation/bottom-tabs`: Tab navigation
-- `react-native-screens`: Native screens
-- `react-native-gesture-handler`: Gesture support
-
-### State Management
-- `zustand`: Lightweight state management
-- `@react-native-async-storage/async-storage`: Local persistence
-
-### Web Rendering
-- `react-native-webview`: Web content rendering
-
-### UI Components
-- `expo-status-bar`: Status bar management
-- `expo-constants`: App constants
-- `expo-splash-screen`: Splash screen
-
-### Development
-- `typescript`: Type safety
-- `jest`: Testing framework
-- `eslint`: Code linting
-- `prettier`: Code formatting
-
-## Future Architecture Improvements
-
-1. **State Machine**: Consider XState for complex UI flows
-2. **Offline Support**: Implement service workers
-3. **Telemetry**: Add analytics without compromising privacy
-4. **Plugin System**: Allow third-party extensions
-5. **Sync**: Cross-device bookmark and history sync
-6. **Performance**: Add performance monitoring and optimization
-
-## Conventions & Best Practices
-
-### File Organization
-- Group related functionality in directories
-- Use index files for clean imports
-- Keep files under 300 lines
-
-### Naming Conventions
-- Components: PascalCase (e.g., BrowserScreen.tsx)
-- Utilities: camelCase (e.g., normalizeUrl)
-- Types: PascalCase (e.g., BrowserTab)
-- Constants: UPPER_SNAKE_CASE (e.g., DEFAULT_HOME_URL)
-
-### TypeScript Usage
-- Use strict mode
-- Avoid `any` type
-- Define interfaces for all data structures
-- Use discriminated unions for complex types
-
-### Component Structure
-```typescript
-// 1. Imports
-// 2. Types/Interfaces
-// 3. Component definition
-// 4. Styles
-// 5. Exports
-```
+1. **Feature Independence**: Each feature should be self-contained
+2. **Dependency Rule**: Dependencies point inward (domain is innermost)
+3. **Single Responsibility**: Each class/module has one reason to change
+4. **Testability**: Write testable code with dependency injection
+5. **Type Safety**: Use strong typing and const constructors
+6. **Documentation**: Document public APIs and complex logic
 
 ---
 
-This architecture provides a solid foundation for a production-grade browser application with room for growth and enhancement.
+For implementation details, refer to specific feature documentation.
